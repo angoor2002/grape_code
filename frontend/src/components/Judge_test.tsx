@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
 import submitCode from '../api/submitCode';
+import saveCode from '../api/saveCode';
 
 export const Judge_test = () => {
     const [language, setLanguage] = useState<string>("javascript");
     const [code, setCode] = useState<string>("// some comment");
     const [output, setOutput] = useState<string>("");
     const [input, setInput] = useState<string>("");
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+    const [codeName, setCodeName] = useState<string>("");
 
     const handleLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setLanguage(event.target.value);
@@ -23,6 +26,20 @@ export const Judge_test = () => {
     const handleSubmit = async () => {
         const result = await submitCode(language, code, input);
         setOutput(result);
+    };
+
+    const handleSave = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleSaveConfirm = async () => {
+        if (codeName.trim()) {
+            await saveCode({ name: codeName, language, code });
+            setIsModalOpen(false);
+            setCodeName(""); // Clear the name input after saving
+        } else {
+            alert("Please enter a code name.");
+        }
     };
 
     return (
@@ -46,6 +63,12 @@ export const Judge_test = () => {
                     className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                     Submit
+                </button>
+                <button
+                    onClick={handleSave}
+                    className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                    Save
                 </button>
             </div>
 
@@ -77,6 +100,35 @@ export const Judge_test = () => {
                     </div>
                 </div>
             </div>
+
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+                    <div className="bg-white p-6 rounded-md shadow-md">
+                        <h3 className="text-lg font-medium text-gray-700 mb-4">Save Code</h3>
+                        <input
+                            type="text"
+                            value={codeName}
+                            onChange={(e) => setCodeName(e.target.value)}
+                            placeholder="Enter code name"
+                            className="w-full p-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <div className="flex space-x-4">
+                            <button
+                                onClick={handleSaveConfirm}
+                                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none"
+                            >
+                                Save
+                            </button>
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
